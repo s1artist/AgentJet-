@@ -133,6 +133,13 @@
 - C 是openclaw启动
 - D 是监控面板
 - E 是对话
+### 终端 F：
+```bash
+cd /gfs/space/private/fengzl/AgentJet  # 进入 AgentJet 根目录
+source /gfs/space/private/fengzl/AgentJet/.venv/bin/activate  # 激活 AgentJet 环境
+tensorboard --logdir /gfs/space/private/fengzl/AgentJet/tensorboard_log/fengzl_agentjet/qwen3_17b_openclaw_swarm_manual --host 0.0.0.0 --port 6006
+```
+<img width="2226" height="1195" alt="image" src="https://github.com/user-attachments/assets/02d3fa0d-90fd-47f9-bfa3-4244b2822c73" />
 
 ## 5. 先准备环境
 
