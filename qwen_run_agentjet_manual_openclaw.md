@@ -61,17 +61,86 @@
 
 建议开 `4` 个终端，最不容易混乱。
 
-- 终端 A：启动 `ajet-swarm start`
-- 终端 B：启动 `fake_vllm_endpoint.py`
-- 终端 C：你自己和 OpenClaw 对话
-- 终端 D：看训练状态、TensorBoard、导出曲线
+- 终端 A：启动 `ajet-swarm start`:
+  <img width="909" height="525" alt="image" src="https://github.com/user-attachments/assets/cce0c473-4a9c-4d52-a3bd-8e35541f2919" />
+  
+
+- 终端 B：启动 `fake_vllm_endpoint.py`：
+  <img width="917" height="530" alt="image" src="https://github.com/user-attachments/assets/23bb8e02-9e65-4d49-8da3-8137aa3e284b" />
+
+- 终端 C：启动 OpenClaw 和相关配置文件，open claw后台：
+  <img width="899" height="598" alt="image" src="https://github.com/user-attachments/assets/adb251db-2719-4ce3-99f9-1435b4329097" />
+
+- 终端 D：openclaw看训练状态（进入虚拟环境执行：ajet-swarm overwatch）、TensorBoard、导出曲线：
+<img width="782" height="731" alt="image" src="https://github.com/user-attachments/assets/b4a13e2f-182f-4f96-8066-b80f848f0270" />
+
+  # AgentJet Swarm Overwatch 日志解读
+
+## 1. 顶部状态区
+
+| 字段 | 当前值 | 含义 | 这张图说明了什么 |
+|---|---:|---|---|
+| Server | `http://localhost:10086` | Overwatch 当前连接的 Swarm Server 地址 | 监控连的是本机 `10086` 端口的 AgentJet Swarm 服务 |
+| Current Time | `2026-04-16 10:33:24` | 当前界面时间 | 这是这次截图对应的时间点 |
+| Last Update | `10:33:24` | 面板最近一次刷新时间 | 说明数据是刚刷新的，不是旧缓存 |
+| Refresh | `2.0s` | 面板刷新间隔 | 每 2 秒更新一次状态 |
+| Requests | `41` | 当前累计请求数 | 说明系统已经处理了一批请求，不是刚启动 |
+| Engine Status | `ENGINE.ROLLING` | 引擎当前状态 | 表示系统正在进行 rollout / 样本采集，不是空闲或报错 |
+| Global Step (Model's Weight Version) | `4` | 当前模型权重版本号 | 说明已经发生过多次参数更新，不只是单纯采样 |
+
+## 2. Completed Episode Pool Summary
+
+| 指标 | Current | Target | Progress | 含义 | 这张图说明了什么 |
+|---|---:|---:|---:|---|---|
+| Completed Episodes | `8` | `16` | `50.0%` | 已完成 episode 数 / 下一次更新所需 episode 数 | 为下一次权重更新已经攒到一半样本 |
+| Completed Tasks (chosen) | `2` | `4` | `50.0%` | 已完成的被选中 task 数 / 目标 task 数 | 当前已完成 2 个有效 task |
+| Completed Non-Dummy Tasks | `2` | `4` | `50.0%` | 已完成的真实任务数，不含 dummy task | 目前完成的都是真实任务 |
+| Average Episode Per Task | `4.00` | `4` | `-` | 每个 task 平均对应多少个 episode | 当前正好每个 task 平均 4 个 episode，结构很整齐 |
+
+## 3. Running Episodes
+
+| 字段 | 当前值 | 含义 | 这张图说明了什么 |
+|---|---:|---|---|
+| Running Episodes | `4` | 当前并发运行中的 episode 数量 | 当前有 4 条 episode 正在跑 |
+| Episode UUID | 多个 UUID | 每条 episode 的唯一标识 | 用来区分不同 rollout |
+| Status | `claimed` | 该 episode 已被 worker/client 领取并在执行 | 4 条 episode 都已经被分配出去在跑 |
+| LLM Calls | `1` | 当前 episode 已发生的 LLM 调用次数 | 每条 episode 目前只调用了 1 次 LLM，说明都还比较早期或任务较简单 |
+| Last Req / Patience | `6.6s / 240.0s` | 上次请求距现在多久 / 超时耐心阈值 | 这些 episode 都很活跃，没有卡死或超时 |
+
+## 4. Task Completion Details
+
+| 字段 | 含义 | 这张图里的情况 |
+|---|---|---|
+| Task ID | 已完成任务的唯一 ID | 由于终端太窄，这一块被压缩得比较严重 |
+| Episodes | 该 task 对应的 episode 数 | 理论上会显示，但当前截图里几乎看不清 |
+| Reward | 该 task 的 reward 统计 | 当前界面宽度不够，信息被挤掉了 |
+| Episode UUIDs (first 3) | 该 task 下前几个 episode 的 UUID | 也是因为终端宽度问题没有正常展示出来 |
+
+## 5. 整体结论
+
+| 结论项 | 结论 |
+|---|---|
+| 系统状态 | 正常运行中 |
+| 当前阶段 | 正在 rollout，并为下一次权重更新继续攒样本 |
+| 训练是否真的发生 | 是，`Global Step = 4` 说明已经发生过多次参数更新 |
+| 当前采样进度 | `8/16 episodes`，也就是下一次更新进度 `50%` |
+| 当前并发情况 | 有 `4` 条 episode 正在运行 |
+| 是否卡住 | 没有，running episodes 都是活跃状态 |
+
+## 6. 一句话总结
+
+你的 AgentJet 系统已经正常进入“采样 -> 更新 -> 再采样”的循环；当前模型权重版本是 `4`，说明已经训练更新过多次；此时正在并发跑 `4` 条 episode，并且已经为下一次更新收集到了 `8/16` 条样本，进度 `50%`。
+- 终端 E：和openclaw对话：
+  <img width="727" height="290" alt="image" src="https://github.com/user-attachments/assets/edfd6b23-4f75-47de-8f94-b6cf703e8cc0" />
+
 
 终端分工理解成这样最清楚：
 
 - A 是 server
 - B 是 client 代理
-- C 是真人发请求
+- C 是openclaw启动
 - D 是监控面板
+- E 是对话
 
 ## 5. 先准备环境
 
