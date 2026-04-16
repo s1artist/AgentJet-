@@ -127,9 +127,6 @@
 | 当前并发情况 | 有 `4` 条 episode 正在运行 |
 | 是否卡住 | 没有，running episodes 都是活跃状态 |
 
-## 6. 一句话总结
-
-你的 AgentJet 系统已经正常进入“采样 -> 更新 -> 再采样”的循环；当前模型权重版本是 `4`，说明已经训练更新过多次；此时正在并发跑 `4` 条 episode，并且已经为下一次更新收集到了 `8/16` 条样本，进度 `50%`。
 - 终端 E：和openclaw对话：
   <img width="727" height="290" alt="image" src="https://github.com/user-attachments/assets/edfd6b23-4f75-47de-8f94-b6cf703e8cc0" />
 
