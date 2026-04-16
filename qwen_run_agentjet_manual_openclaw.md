@@ -63,7 +63,8 @@
 
 ### 终端 A：启动 `ajet-swarm start`:
   <img width="909" height="525" alt="image" src="https://github.com/user-attachments/assets/cce0c473-4a9c-4d52-a3bd-8e35541f2919" />
-- 它里面真正会拉起：
+  
+- 会拉起：
 
 - AgentJet swarm server
 - verl 训练进程
@@ -72,12 +73,9 @@
 
 ### 终端 B：启动 `fake_vllm_endpoint.py`：
   <img width="917" height="530" alt="image" src="https://github.com/user-attachments/assets/23bb8e02-9e65-4d49-8da3-8137aa3e284b" />
--它监听的是：
-
-- http://127.0.0.1:8090/v1
+  
+-监听：http://127.0.0.1:8090/v1
 - OpenClaw 实际先打到它，不是直接打到真 vLLM。
-
-- 它做的事是：
 
 - 接住 OpenClaw 的 /v1/chat/completions
 - begin_episode() 向 swarm server 申请多个 episode
